@@ -10,8 +10,6 @@ import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
-import com.facebook.react.uimanager.ThemedReactContext;
-import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.github.fujianlian.klinechart.HTKLineConfigManager;
 import com.github.fujianlian.klinechart.HTKLineCallback;
 import com.github.fujianlian.klinechart.KLineChartView;
@@ -39,6 +37,17 @@ public class HTKLineContainerView extends RelativeLayout {
         klineView.setDateTimeFormatter(new DateFormatter());
         klineView.configManager = configManager;
         addView(klineView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+
+        // 左滑到最左侧（历史尽头）时触发，通知 JS 端加载更早的 K 线
+        klineView.setRefreshListener(new KLineChartView.KChartRefreshListener() {
+            @Override
+            public void onLoadMoreBegin(KLineChartView chart) {
+                WritableMap event = Arguments.createMap();
+                event.putDouble("timestamp", System.currentTimeMillis());
+                reactContext.getJSModule(RCTEventEmitter.class)
+                        .receiveEvent(getId(), RNKLineView.onLoadMoreBeginKey, event);
+            }
+        });
     }
 
     @Override

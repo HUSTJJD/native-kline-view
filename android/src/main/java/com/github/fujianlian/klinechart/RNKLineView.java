@@ -29,6 +29,13 @@ public class RNKLineView extends SimpleViewManager<HTKLineContainerView> {
 
 	public static String onDrawPointCompleteKey = "onDrawPointComplete";
 
+	public static String onLoadMoreBeginKey = "onLoadMoreBegin";
+
+    /** 命令：JS 端历史数据加载完成后，通知原生结束「加载更多」转圈并恢复交互 */
+    public static final int COMMAND_RESET_LOAD_MORE_END = 1;
+    /** 命令：JS 端确认已无更早历史（已到上市首日），彻底关闭加载更多 */
+    public static final int COMMAND_SET_LOAD_MORE_END = 2;
+
     @Nonnull
     @Override
     public String getName() {
@@ -47,8 +54,46 @@ public class RNKLineView extends SimpleViewManager<HTKLineContainerView> {
 		return MapBuilder.of(
 				onDrawItemDidTouchKey, MapBuilder.of("registrationName", onDrawItemDidTouchKey),
 				onDrawItemCompleteKey, MapBuilder.of("registrationName", onDrawItemCompleteKey),
-				onDrawPointCompleteKey, MapBuilder.of("registrationName", onDrawPointCompleteKey)
+				onDrawPointCompleteKey, MapBuilder.of("registrationName", onDrawPointCompleteKey),
+				onLoadMoreBeginKey, MapBuilder.of("registrationName", onLoadMoreBeginKey)
 		);
+	}
+
+	@Override
+	public Map<String, Integer> getCommandsMap() {
+		return MapBuilder.of(
+				"resetLoadMoreEnd", COMMAND_RESET_LOAD_MORE_END,
+				"setLoadMoreEnd", COMMAND_SET_LOAD_MORE_END
+		);
+	}
+
+	@Override
+	public void receiveCommand(@Nonnull HTKLineContainerView containerView, int commandId, ReadableArray args) {
+		switch (commandId) {
+			case COMMAND_RESET_LOAD_MORE_END:
+				containerView.klineView.resetLoadMoreEnd();
+				break;
+			case COMMAND_SET_LOAD_MORE_END:
+				containerView.klineView.setLoadMoreEnd();
+				break;
+			default:
+				break;
+		}
+	}
+
+	// 新架构（Fabric）命令分发：以命令名为 key
+	@Override
+	public void receiveCommand(@Nonnull HTKLineContainerView containerView, String commandId, ReadableArray args) {
+		switch (commandId) {
+			case "resetLoadMoreEnd":
+				containerView.klineView.resetLoadMoreEnd();
+				break;
+			case "setLoadMoreEnd":
+				containerView.klineView.setLoadMoreEnd();
+				break;
+			default:
+				break;
+		}
 	}
 
 

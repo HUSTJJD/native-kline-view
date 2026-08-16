@@ -17,6 +17,25 @@ class HTKLineContainerView: UIView {
     
     @objc var onDrawPointComplete: RCTBubblingEventBlock?
     
+    @objc var onLoadMoreBegin: RCTBubblingEventBlock? {
+        didSet {
+            klineView.onLoadMoreBegin = { [weak self] in
+                guard let self = self, let block = self.onLoadMoreBegin else { return }
+                block([:])
+            }
+        }
+    }
+    
+    /// 历史数据加载完成后，通知原生结束「加载更多」转圈并恢复交互
+    @objc func resetLoadMoreEnd(_ node: NSNumber) {
+        klineView.resetLoadMoreState()
+    }
+    
+    /// 确认已无更早历史（已到上市首日），彻底关闭加载更多
+    @objc func setLoadMoreEnd(_ node: NSNumber) {
+        klineView.endLoadMoreState()
+    }
+    
     @objc var optionList: String? {
         didSet {
             guard let optionList = optionList else {

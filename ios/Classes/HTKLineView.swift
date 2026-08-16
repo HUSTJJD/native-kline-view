@@ -13,6 +13,20 @@ class HTKLineView: UIScrollView {
         
     var configManager: HTKLineConfigManager
     
+    /// 左滑到最左边界（历史尽头）时回调，用于向 JS 端请求更早的 K 线（无限左滑到上市首日）
+    var onLoadMoreBegin: (() -> Void)?
+    
+    /// 防止 scrollViewDidScroll 在到边界后反复触发 onLoadMoreBegin，由 resetLoadMoreEnd/setLoadMoreEnd 复位
+    private var loadMorePending = false
+    
+    func resetLoadMoreState() {
+        loadMorePending = false
+    }
+    
+    func endLoadMoreState() {
+        loadMorePending = true
+    }
+    
     lazy var drawContext: HTDrawContext = {
         let drawContext = HTDrawContext.init(self, configManager)
         return drawContext
@@ -609,6 +623,13 @@ extension HTKLineView: UIScrollViewDelegate {
         visibleEndIndex = min(max(0, visibleEndIndex), configManager.modelArray.count - 1)
         visibleRange = visibleStartIndex...visibleEndIndex
         self.setNeedsDisplay()
+        
+        // 左滑到最左边界（历史尽头）时触发加载更早 K 线
+        guard !loadMorePending else { return }
+        if contentOffsetX <= 0 {
+            loadMorePending = true
+            onLoadMoreBegin?()
+        }
     }
 
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {

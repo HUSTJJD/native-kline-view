@@ -235,14 +235,22 @@ public class KLineChartView extends BaseKLineChartView {
     }
 
     /**
-     * 重置加载更多
+     * 重置加载更多：历史数据已加载完成，恢复滑动/缩放手势，允许继续左滑到更早。
+     * 注意必须同时清除 isRefreshing 并恢复手势（等同于 refreshComplete），否则 scroll 会被永久禁用导致「滑不动」。
      */
     public void resetLoadMoreEnd() {
         isLoadMoreEnd = false;
+        isRefreshing = false;
+        hideLoading();
     }
 
+    /**
+     * 设置加载更多结束：已无更早历史（到上市首日），锁定加载更多，但恢复滑动手势。
+     */
     public void setLoadMoreEnd() {
         isLoadMoreEnd = true;
+        isRefreshing = false;
+        hideLoading();
     }
 
     public interface KChartRefreshListener {
